@@ -1,9 +1,6 @@
 """
 PLAN:
-- Add proper hitboxes for left/right side of a platform.
-- Then learn and set up git
 - Add a starting platform and ascending things over lava
-- I need a way to (possibly) iterate through every platform to see if anything is colliding with the player. 
 """
 
 import pygame
@@ -13,38 +10,35 @@ game_width = 1500
 game_height = 1000
 
 def check_vertical_landing(player, platform, velocity): # hitting roof / touching floor
+
+    horizontal_overlap = (player.right > platform.left and player.left < platform.right)
+    if horizontal_overlap and player.bottom == platform.top:
+        return player, 0, True
+
     if player.colliderect(platform) == False:
         return player, velocity, False
-    if velocity < 0:
+
+    # Hit bottom of platform when jumping
+    if player.colliderect(platform) and velocity > 0:
+        player.top = platform.bottom
+        velocity = 0
+        return player, velocity, False
+
+    # Landed on top
+    if player.colliderect(platform) and velocity < 0:
         player.bottom = platform.top
         velocity = 0
         return player, velocity, True
 
-    elif velocity > 0:
-        player.top = platform.bottom
-        velocity = 0
+def check_horizontal_landing(player, platform, direction): # hitting wall to the side.
 
-    return player, velocity, False
-
-def check_horizontal_landing(player, platform, blocked_left, blocked_right): # hitting wall to the side.
-    left_check = player.move(-1, 0) # think critically about this design.
-    if left_check.colliderect(platform):
+    if player.colliderect(platform) and direction == "left":
         player.left = platform.right
-        blocked_left = True
-        print('left')
-    else:
-        blocked_left = False
 
-    
-    right_check = player.move(1, 0)
-    if right_check.colliderect(platform):
+    if player.colliderect(platform) and direction == "right":
         player.right = platform.left
-        blocked_right = True
-        print('right')
-    else:
-        blocked_right = False
 
-    return player, blocked_left, blocked_right
+    return player
 
 pygame.init()
 
@@ -60,6 +54,7 @@ player_colour = (0, 135, 6)
 velocity = 0
 gravity = 1
 jump_strength = 22
+move_speed = 5
 
 player = pygame.Rect(100, 400, 40, 40)
 
@@ -67,11 +62,18 @@ floor = pygame.Rect(0, 900, 1500, 100)
 wallleft = pygame.Rect(0, 0, 50, 1000)
 wallright = pygame.Rect(1450, 0, 50, 1000)
 platform1 = pygame.Rect(700, 850, 50, 10)
-
 ceiling = pygame.Rect(0, 0, 1500, 100)
 
+
+platforms = [
+    floor, 
+    wallleft, 
+    wallright, 
+    platform1, 
+    ceiling
+    ]
+
 running = True
-grounded = False
 blocked_left = False
 blocked_right = False
 
@@ -80,22 +82,15 @@ while running:
 
     player.y -= velocity
 
-    player, velocity, grounded = check_vertical_landing(player, floor, velocity)
-    if not grounded:
-        player, velocity, grounded = check_vertical_landing(player, platform1, velocity)
+    grounded = False
+
+    for platform in platforms:
+        player, velocity, landed = check_vertical_landing(player, platform, velocity)
+        if landed:
+            grounded = True
+
     if not grounded:
         velocity -= gravity
-    
-    player, blocked_left, blocked_right = check_horizontal_landing(player, wallleft, blocked_left, blocked_right)
-    player, blocked_left, blocked_right = check_horizontal_landing(player, wallright, blocked_left, blocked_right)
-    player, blocked_left, blocked_right = check_horizontal_landing(player, platform1, blocked_left, blocked_right)
-
-
-
-    if player.colliderect(ceiling):
-        velocity = 0
-        player.y = 100
-
 
     for event in pygame.event.get():
 
@@ -115,11 +110,17 @@ while running:
     # Get the state of all keys
     keys = pygame.key.get_pressed()
     
-    if keys[pygame.K_a] and not blocked_left:
-        player.x -= 3
+    if keys[pygame.K_a]:
+        player.x -= move_speed
 
-    if keys[pygame.K_d] and not blocked_right:
-        player.x += 3
+        for platform in platforms:
+            player = check_horizontal_landing(player, platform, "left")
+
+    if keys[pygame.K_d]:
+        player.x += move_speed
+        
+        for platform in platforms:
+            player = check_horizontal_landing(player, platform, "right")
 
     
     floor = pygame.Rect(0, 900, 1500, 100)
@@ -132,3 +133,4 @@ while running:
     pygame.draw.rect(screen, wall_colour, wallright)
     pygame.draw.rect(screen, player_colour, player)
     clock.tick(60)
+    pygame.display.flip()
