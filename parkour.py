@@ -132,4 +132,3 @@ while running:
     pygame.draw.rect(screen, wall_colour, wallright)
     pygame.draw.rect(screen, player_colour, player)
     clock.tick(60)
-    pygame.display.flip()
