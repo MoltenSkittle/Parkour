@@ -9,3 +9,8 @@ W to jump. A to move left. D to move right. Your goal is to jump from platform t
 
 # Notes From Developer:
 This game isn't complete; it serves as a minimum-viable product. Choosing the 'Quit' option after dying in lava or reaching the coin doesn't do anything. Additionally, new levels haven't been added yet, so choosing the 'Next Level' option when reaching the coin doesn't do anything either.
+
+# Why I Made This
+I began working on this game to get a grasp on how basic platformer games work. I eventually want to work on a larger project focused on recreating a map of a 2D game I played in my childhood, with this project as part of the process.
+
+<img width="1469" height="969" alt="png5" src="https://github.com/user-attachments/assets/4d909821-be15-4a56-9448-9ce020ff5763" />
