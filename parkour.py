@@ -1,6 +1,14 @@
 import pygame
 import sys
 
+""" 
+Changes to make:
+- Restructure levels (play is general, but when play is active, we should also access what level is being played so that I can add more levels.
+- Add pause button
+- Add levels screen
+- Maybe make it go daytime to nighttime (and travel to different biomes) 
+"""
+
 game_width = 1500
 game_height = 1000
 
@@ -50,6 +58,7 @@ blue = (42, 116, 255)
 red = (204, 0, 0)
 green = (0, 176, 48)
 gold_yellow = (245, 204, 3)
+skyblue = (0, 184, 255)
 
 black = (0, 0, 0)
 p_main_font = pygame.font.SysFont('calibri', 70)
@@ -66,13 +75,24 @@ w_quit_text = w_button_font.render("Quit", True, black)
 w_nextlevel_text = w_button_font.render("Next Level", True, black)
 
 
-
 velocity = 0
 gravity = 1
 jump_strength = 12
 move_speed = 5
 
-# Starting Screen (NOT ADDED YET)
+# Starting Screen
+starting_screen_bg = pygame.Rect(0, 0, 1500, 1000)
+title_font = pygame.font.SysFont('calibri', 100)
+title_text = title_font.render("ParkourPro", True, black)
+play_button = pygame.Rect(400, 400, 700, 100)
+play_bt_font = pygame.font.SysFont('calibri', 55)
+play_bt_text = play_bt_font.render("Play", True, black)
+
+# Levels Screen
+# Note: Uses starting screen bg
+levels_title_text = title_font.render("Levels", True, black)
+# Maybe I can store all the levels in a dictionary?
+# Find a way to demo the levels. Perhaps I can make some art and make it like a super mario 3d world (a LOT SIMPLER) or something.
 
 # Win Screen
 w_playagain_button = pygame.Rect(300, 650, 233, 100)
@@ -116,7 +136,7 @@ platforms = [
     floor, 
     wallleft, 
     wallright,  
-    platform1,  platform2, platform3, platform4, platform5, platform6, platform7, platform8, platform9, platform10, platform11, platform12, platform13, platform14, 
+    platform1, platform2, platform3, platform4, platform5, platform6, platform7, platform8, platform9, platform10, platform11, platform12, platform13, platform14, 
     ceiling
     ]
 
@@ -130,20 +150,60 @@ lava = pygame.Rect(0, 900, 1500, 50)
 running = True
 blocked_left = False
 blocked_right = False
-game_active = True
-alive = True
-win = False
+
+active_screen = {
+    "death": False,
+    "levels": False,
+    "lose": False,
+    "main": False,
+    "pause": False,
+    "pause": False,
+    "play": True,
+    "win": False,
+}
+
+active_level = {
+    1: True,
+    2: False,
+    3: False,
+    4: False,
+    5: False,
+}
+
+def change_screen(current, new, active_screen):
+    active_screen[current] = False
+    active_screen[new] = True
+    return active_screen
+
+def change_level(levels):
+    for level in levels:
+        if levels[level]:
+            active_level = level + 1
+    return active_level
 
 # Game Loop
 running = True
 while running:
 
-
-    if not game_active and not alive:
-        # Player is not in a game right now; on loading screen
+    if active_screen["main"]:
+        # Main Screen
+        pygame.draw.rect(screen, skyblue, starting_screen_bg)
+        screen.blit(title_text, (450, 100))
+        pygame.draw.rect(screen, green, play_button)
+        screen.blit(play_bt_text, (450, 450))
 
         # Handling exiting the game
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1: # Left click
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    if mouse_x in range(play_button[0], play_button[0] + play_button[2]) and mouse_y in range(play_button[1], play_button[1] + play_button[3]):
+                        active_screen = change_screen("main", "play", active_screen) # NOTE levels isn't fully developed, so play is temporarily used instead.
+                        blocked_left = False
+                        blocked_right = False
+                        velocity = 0
+                        player = pygame.Rect(80, 400, 25, 25)
+
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
@@ -151,10 +211,8 @@ while running:
                     pygame.quit()
                     sys.exit()
 
-
-    if not game_active and alive: 
+    if active_screen["pause"]:
         # Pause Screen
-        
         # Handling exiting the game
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -164,7 +222,7 @@ while running:
                     pygame.quit()
                     sys.exit()
 
-    if game_active and alive and win:
+    if active_screen["win"]:
         pygame.draw.circle(screen, screen_colour, (1425, 275), 10)
         pygame.draw.rect(screen, player_colour, player)
         # Win Screen
@@ -183,17 +241,20 @@ while running:
                 if event.button == 1: # Left click
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if mouse_x in range(300, 533) and mouse_y in range(650, 750):
-                        win = False
+                        active_screen = change_screen("win", "play", active_screen)
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
                         player = pygame.Rect(80, 400, 25, 25)
                     if mouse_x in range(633, 867) and mouse_y in range(650, 750):
-                        pass # Started screen not added yet!
+                        active_screen = change_screen("win", "main", active_screen)
                     if mouse_x in range(967, 1200) and mouse_y in range(650, 750):
-                        pass # New levels have not been added yet!
+                        active_screen = change_screen("win", "play", active_screen)
+                        level = change_level(active_level)
+                        # this needs more improvising, I don't have a screen for new levels.
+                        # New levels have not been added yet!
 
-    if game_active and not alive and not win: 
+    if active_screen["death"]:
         # Death Screen
         pygame.draw.rect(screen, death_screen_colour, death_screen)
         screen.blit(d_main_text, (600, 275))
@@ -207,15 +268,13 @@ while running:
                 if event.button == 1:  # Left click
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if mouse_x in range(300, 700) and mouse_y in range(650, 750):
-                        alive = True
+                        active_screen = change_screen("death", "play", active_screen)
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
                         player = pygame.Rect(80, 400, 25, 25)
                     if mouse_x in range(800, 1200) and mouse_y in range(650, 750):
-                        pass # Started screen not added yet!
-
-
+                        active_screen = change_screen("death", "main", active_screen)
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
@@ -223,7 +282,7 @@ while running:
                     pygame.quit()
                     sys.exit()
 
-    if game_active and alive and not win:
+    if active_screen["play"]:
         # Player is alive
         screen.fill(screen_colour) # background
 
@@ -272,10 +331,10 @@ while running:
                 player = check_horizontal_landing(player, platform, "right")
 
         if player.colliderect(coin1):
-            win = True
+            active_screen = change_screen("play", "win", active_screen)
 
         if player.colliderect(lava):
-            alive = False
+            active_screen = change_screen("play", "death", active_screen)
 
         pygame.draw.rect(screen, lava_colour, lava)
         for platform in platforms:
