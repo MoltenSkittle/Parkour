@@ -3,10 +3,12 @@ import sys
 
 """ 
 Changes to make:
-- Restructure levels (play is general, but when play is active, we should also access what level is being played so that I can add more levels.
+- Continue developing individual levels
+    - Winscreens and basically all non-default screens have platform/player/lava/coin values with hardcoded integration. That will need to change.
 - Add levels screen
-- Maybe make it go daytime to nighttime (and travel to different biomes) 
 - Add art
+    - Make the pause button look like a pause button
+    - Maybe make it go daytime to nighttime (and travel to different biomes) 
 """
 
 game_width = 1500
@@ -119,46 +121,55 @@ d_quit_button = pygame.Rect(800, 650, 400, 100)
 
 # Game Screen Starts Here
 # Player
-player = pygame.Rect(80, 400, 25, 25)
 
 # Pause Button
 pause_button = pygame.Rect(1440, 10, 50, 50) # NOTE This could be the point where I begin adding images
 
 # Platforms
-floor = pygame.Rect(0, 950, 1500, 50)
-wallleft = pygame.Rect(0, 0, 50, 1000)
-wallright = pygame.Rect(1450, 0, 50, 1000)
 
-platform1 = pygame.Rect(0, 850, 135, 150)
-platform2 = pygame.Rect(200, 820, 50, 10)
-platform3 = pygame.Rect(315, 790, 50, 10)
-platform4 = pygame.Rect(430, 760, 50, 10)
-platform5 = pygame.Rect(560, 730, 50, 10)
-platform6 = pygame.Rect(590, 670, 50, 10)
-platform7 = pygame.Rect(620, 610, 50, 10)
-platform8 = pygame.Rect(720, 580, 50, 10)
-platform9 = pygame.Rect(820, 550, 50, 10)
-platform10 = pygame.Rect(940, 520, 50, 10)
-platform11 = pygame.Rect(1040, 480, 50, 10)
-platform12 = pygame.Rect(1180, 440, 50, 10)
-platform13 = pygame.Rect(1300, 380, 50, 10)
-platform14 = pygame.Rect(1400, 310, 50, 10)
+# Level 1
+level1_platforms = {
+    "floor": pygame.Rect(0, 950, 1500, 50),
+    "wallleft": pygame.Rect(0, 0, 50, 1000),
+    "wallright": pygame.Rect(1450, 0, 50, 1000),
+    "ceiling": pygame.Rect(0, 0, 1500, 100),
+    "platform1": pygame.Rect(0, 850, 135, 150),
+    "platform2": pygame.Rect(200, 820, 50, 10),
+    "platform3": pygame.Rect(315, 790, 50, 10),
+    "platform4": pygame.Rect(430, 760, 50, 10),
+    "platform5": pygame.Rect(560, 730, 50, 10),
+    "platform6": pygame.Rect(590, 670, 50, 10),
+    "platform7": pygame.Rect(620, 610, 50, 10),
+    "platform8": pygame.Rect(720, 580, 50, 10),
+    "platform9": pygame.Rect(820, 550, 50, 10),
+    "platform10": pygame.Rect(940, 520, 50, 10),
+    "platform11": pygame.Rect(1040, 480, 50, 10),
+    "platform12": pygame.Rect(1180, 440, 50, 10),
+    "platform13": pygame.Rect(1300, 380, 50, 10),
+    "platform14": pygame.Rect(1400, 310, 50, 10),
+}
 
-ceiling = pygame.Rect(0, 0, 1500, 100)
-
-platforms = [
-    floor, 
-    wallleft, 
-    wallright,  
-    platform1, platform2, platform3, platform4, platform5, platform6, platform7, platform8, platform9, platform10, platform11, platform12, platform13, platform14, 
-    ceiling
-    ]
-
+level1_player = pygame.Rect(80, 400, 25, 25)
 # Winning Coin (Uses rectangular hitbox)
-coin1 = pygame.Rect(1415, 265, 20, 20)
-
+level1_coin = pygame.Rect(1415, 265, 20, 20)
 # Lava
-lava = pygame.Rect(0, 900, 1500, 50)
+level1_lava = pygame.Rect(0, 900, 1500, 50)
+
+# Level 2
+level2_platforms = {
+    "wallleft": pygame.Rect(0, 0, 50, 1000),
+    "wallright": pygame.Rect(1450, 0, 50, 1000),
+    "ceiling": pygame.Rect(0, 0, 1500, 100),
+    "floorleft": pygame.Rect(0, 950, 400, 50),
+    "platform1": pygame.Rect(400, 200, 33, 800),
+    "platform2": pygame.Rect(833, 100, 33, 750),
+    # actually build the rest of the level
+}
+level2_player = pygame.Rect(80, 125, 25, 25)
+level2_coin = pygame.Rect(1300, 200, 20, 20)
+level2_lava = pygame.Rect(433, 950, 1017, 50)
+
+
 # Game Screen Ends Here
 
 running = True
@@ -189,11 +200,18 @@ def change_screen(current, new, active_screen):
     active_screen[new] = True
     return active_screen
 
-def change_level(levels):
-    for level in levels:
-        if levels[level]:
-            active_level = level + 1
+def change_level(active_level):
+    for level in active_level:
+        if active_level[level]:
+            new_level = level + 1
+            active_level[level] = False
+    active_level[new_level] = True
     return active_level
+
+def identify_level(active_level):
+    for level in active_level:
+        if active_level[level]:
+            return level
 
 # Game Loop
 running = True
@@ -216,7 +234,10 @@ while running:
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
-                        player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[1]:
+                            level1_player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[2]:
+                            level2_player = pygame.Rect(80, 125, 25, 25)
 
             if event.type == pygame.QUIT:
                 running = False
@@ -242,11 +263,14 @@ while running:
                 if event.button == 1:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if mouse_x in range(w_playagain_button[0], w_playagain_button[0] + w_playagain_button[2]) and mouse_y in range(w_playagain_button[1], w_playagain_button[1] + w_playagain_button[3]):
-                        active_screen = change_screen("pause", "play", active_screen) # NOTE levels isn't fully developed, so play is temporarily used instead.
+                        active_screen = change_screen("pause", "play", active_screen)
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
-                        player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[1]:
+                            level1_player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[2]:
+                            level2_player = pygame.Rect(80, 125, 25, 25)
                     if mouse_x in range(w_quit_button[0], w_quit_button[0] + w_quit_button[2]) and mouse_y in range(w_quit_button[1], w_quit_button[1] + w_quit_button[3]):
                         active_screen = change_screen("pause", "main", active_screen)
                     if mouse_x in range(w_nextlevel_button[0], w_nextlevel_button[0] + w_nextlevel_button[2]) and mouse_y in range(w_nextlevel_button[1], w_nextlevel_button[1] + w_nextlevel_button[3]):
@@ -280,14 +304,17 @@ while running:
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
-                        player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[1]:
+                            level1_player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[2]:
+                            level2_player = pygame.Rect(80, 125, 25, 25)
                     if mouse_x in range(633, 867) and mouse_y in range(650, 750):
                         active_screen = change_screen("win", "main", active_screen)
                     if mouse_x in range(967, 1200) and mouse_y in range(650, 750):
+                        active_level = change_level(active_level)
                         active_screen = change_screen("win", "play", active_screen)
-                        level = change_level(active_level)
-                        # this needs more improvising, I don't have a screen for new levels.
-                        # New levels have not been added yet!
+                        # Add a way to create and store more levels.
+                        # Currently, the level switches, but I don't really have more levels.
 
 # Death Screen
     if active_screen["death"]:
@@ -307,7 +334,10 @@ while running:
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
-                        player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[1]:
+                            level1_player = pygame.Rect(80, 400, 25, 25)
+                        if active_level[2]:
+                            level2_player = pygame.Rect(80, 125, 25, 25)
                     if mouse_x in range(800, 1200) and mouse_y in range(650, 750):
                         active_screen = change_screen("death", "main", active_screen)
             if event.type == pygame.QUIT:
@@ -320,17 +350,31 @@ while running:
 # Playing
     if active_screen["play"]:
         screen.fill(colours["screen_colour"]) # background
-        
-        pygame.draw.rect(screen, colours["lava_colour"], lava)
-        for platform in platforms:
-            pygame.draw.rect(screen, colours["wall_colour"], platform)
-        pygame.draw.rect(screen, colours["grey"], pause_button)
-        player.y -= velocity
 
+        if active_level[1]:
+            platforms = level1_platforms.copy()
+            player = level1_player
+            coin = level1_coin
+            lava = level1_lava
+        elif active_level[2]:
+            platforms = level2_platforms.copy()
+            player = level2_player
+            coin = level2_coin
+            lava = level2_lava
+            """
+        elif active_level[3]:
+            platforms = level3_platforms.copy()
+        elif active_level[4]:
+            platforms = level4_platforms.copy()
+        elif active_level[5]:
+            platforms = level5_platforms.copy()
+            """
+
+        player.y -= velocity
         grounded = False
 
         for platform in platforms:
-            player, velocity, landed = check_vertical_landing(player, platform, velocity)
+            player, velocity, landed = check_vertical_landing(player, platforms[platform], velocity)
             if landed:
                 grounded = True
 
@@ -345,42 +389,41 @@ while running:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-            
                 if event.key == pygame.K_w:
                     if grounded:
                         velocity += jump_strength
                         grounded = False
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if mouse_x in range(pause_button[0], pause_button[0] + pause_button[2]) and mouse_y in range(pause_button[1], pause_button[1] + pause_button[3]):
                         active_screen = change_screen("play", "pause", active_screen)
 
-        
         # Get the state of all keys
         keys = pygame.key.get_pressed()
-        
         if keys[pygame.K_a]:
             player.x -= move_speed
-
             for platform in platforms:
-                player = check_horizontal_landing(player, platform, "left")
+                player = check_horizontal_landing(player, platforms[platform], "left")
 
         if keys[pygame.K_d]:
             player.x += move_speed
-            
             for platform in platforms:
-                player = check_horizontal_landing(player, platform, "right")
+                player = check_horizontal_landing(player, platforms[platform], "right")
 
-        if player.colliderect(coin1):
+        if player.colliderect(coin):
             active_screen = change_screen("play", "win", active_screen)
 
         if player.colliderect(lava):
             active_screen = change_screen("play", "death", active_screen)
 
-
+        # Different for every level
+        pygame.draw.rect(screen, colours["lava_colour"], lava)
+        for platform in platforms:
+            pygame.draw.rect(screen, colours["wall_colour"], platforms[platform])
         pygame.draw.rect(screen, colours["player_colour"], player)
         pygame.draw.circle(screen, colours["gold_yellow"], (1425, 275), 10)
+        
+        pygame.draw.rect(screen, colours["grey"], pause_button)
     clock.tick(60)
     pygame.display.flip()
