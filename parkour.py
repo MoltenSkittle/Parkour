@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+
 game_width = 1500
 game_height = 1000
 
@@ -58,6 +59,7 @@ colours = {
     "bouncy_colour": (255, 159, 0),
     "periwinkle": (177, 219, 255),
     "light_green": (198, 255, 195),
+    "white": (255, 255, 255),
 }
 p_main_font = pygame.font.SysFont('calibri', 70) # FOR GENERAL USE
 
@@ -110,6 +112,9 @@ tutorial_bt_text = main_bt_font.render("Tutorial", True, colours["black"])
 # Levels Screen
 levels_title_text = title_font.render("Levels", True, colours["black"])
 lvlbox_font = pygame.font.SysFont('calibri', 20)
+m_back_button = pygame.Rect(50, 50, 125, 50)
+back_button_font = pygame.font.SysFont('calibri', 20)
+back_text = back_button_font.render("Back", True, colours["white"])
 levels_container = pygame.Rect(150, 300, 1200, 600)
 levels_box = {
     1: pygame.Rect(200, 350, 175, 175),
@@ -286,8 +291,10 @@ while running:
         screen.blit(title_text, (500, 100))
         pygame.draw.rect(screen, colours["green"], play_button)
         screen.blit(play_bt_text, (650, 425))
+        """
         pygame.draw.rect(screen, colours["royal_blue"], tutorial_button)
         screen.blit(tutorial_bt_text, (600, 575))
+        """
 
         # Handling exiting the game
         for event in pygame.event.get():
@@ -296,8 +303,10 @@ while running:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if mouse_x in range(play_button[0], play_button[0] + play_button[2]) and mouse_y in range(play_button[1], play_button[1] + play_button[3]):
                         active_screen = change_screen("main", "levels", active_screen)
+                    """
                     if mouse_x in range(tutorial_button[0], tutorial_button[0] + tutorial_button[2]) and mouse_y in range(tutorial_button[1], tutorial_button[1] + tutorial_button[3]):
                         active_screen = change_screen("main", "tutorial", active_screen)
+                    """
 
             if event.type == pygame.QUIT:
                 running = False
@@ -325,6 +334,8 @@ while running:
         levels_lvl4_text = lvlbox_font.render(f"4 - {game_completion[4]}", True, colours["black"])
         levels_lvl5_text = lvlbox_font.render(f"5 - {game_completion[5]}", True, colours["black"])
         pygame.draw.rect(screen, colours["skyblue"], starting_screen_bg)
+        pygame.draw.rect(screen, colours["blue"], m_back_button)
+        screen.blit(back_text, (92, 67))
         screen.blit(levels_title_text, (625, 100))
         pygame.draw.rect(screen, colours["royal_blue"], levels_container)
         for i in range(1, 6):
@@ -341,6 +352,8 @@ while running:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
+                    if mouse_x in range(m_back_button[0], m_back_button[0] + m_back_button[2]) and mouse_y in range(m_back_button[1], m_back_button[1] + m_back_button[3]):
+                        active_screen = change_screen("levels", "main", active_screen)
                     if mouse_x in range(levels_box[1][0], levels_box[1][0] + levels_box[1][2]) and mouse_y in range(levels_box[1][1], levels_box[1][1] + levels_box[1][3]) and game_completion[1] != "LOCKED":
                         for level in active_level:
                             active_level[level] = False
@@ -456,6 +469,7 @@ while running:
                             level2_player = pygame.Rect(80, 900, 25, 25)
                     if mouse_x in range(633, 867) and mouse_y in range(650, 750) and game_completion[2] != "COMPLETE":
                         active_screen = change_screen("win", "main", active_screen)
+                        print('here?')
                     if mouse_x in range(967, 1200) and mouse_y in range(650, 750) and game_completion[2] != "COMPLETE":
                         active_level = change_level(active_level)
                         active_screen = change_screen("win", "play", active_screen)
@@ -467,7 +481,7 @@ while running:
                         if active_level[2]:
                             level2_player = pygame.Rect(80, 900, 25, 25)
                     if mouse_x in range(300, 700) and mouse_y in range(650, 750) and game_completion[2] == "COMPLETE":
-                        active_screen = change_screen("death", "play", active_screen)
+                        active_screen = change_screen("win", "play", active_screen)
                         blocked_left = False
                         blocked_right = False
                         velocity = 0
@@ -475,7 +489,7 @@ while running:
                             level1_player = pygame.Rect(80, 400, 25, 25)
                         if active_level[2]:
                             level2_player = pygame.Rect(80, 900, 25, 25)
-                    if mouse_x in range(300, 700) and mouse_y in range(650, 750):
+                    if mouse_x in range(300, 700) and mouse_y in range(650, 750) and game_completion[2] == "COMPLETE":
                         active_screen = change_screen("win", "play", active_screen)
                     if mouse_x in range(800, 1200) and mouse_y in range(650, 750) and game_completion[2] == "COMPLETE":
                         active_screen = change_screen("win", "main", active_screen)
